@@ -3,13 +3,10 @@ var bodyParser = require('body-parser');
 var request = require('./lib/request');
 
 var app = express();
-app.use(bodyParser.text());
+app.use(bodyParser.json());
 
-app.get('*', function (req, res) {
-    var body;
-    if (req.body instanceof String) {
-        body = req.body;
-    }
+app.all('*', function (req, res) {
+    var body = req.body !== {} ? JSON.stringify(req.body) : undefined;
     request(req.method, req.url, req.headers, body, function (code, headers, response) {
         res.set(headers).status(code).send(response);
     });
