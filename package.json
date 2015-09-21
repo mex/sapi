@@ -19,6 +19,7 @@
   "homepage": "https://github.com/mex/sapi",
   "dependencies": {
     "body-parser": "^1.14.0",
+    "chalk": "^1.1.1",
     "express": "^4.13.3",
     "request": "^2.62.0"
   }
