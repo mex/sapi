@@ -22,5 +22,6 @@
     "chalk": "^1.1.1",
     "express": "^4.13.3",
     "request": "^2.62.0"
-  }
+  },
+  "bin": "bin/sapi"
 }

@@ -1,0 +1,92 @@
+#!/usr/bin/env node
+'use strict';
+
+process.bin = process.title = 'sapi';
+
+var chalk = require('chalk');
+var fs = require('fs');
+var spawn = require('child_process').spawn;
+
+//Define directories and files needed
+var dirPath = __dirname + '/../';
+var logPath = dirPath + 'proxy.log';
+var log = fs.openSync(logPath, 'w');
+var dataPath = dirPath + 'data.json';
+var data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+//Define start/stop methods
+var start = function (env) {
+    var child = spawn('node', [dirPath + 'index.js', env], { detached: true, stdio: [ 'ignore', log, log ] });
+
+    data.pid = child.pid;
+    fs.writeFileSync(dataPath, JSON.stringify(data), 'utf8');
+
+    child.unref();
+};
+var stop = function () {
+    process.kill(data.pid);
+
+    delete data.pid;
+    fs.writeFileSync(dataPath, JSON.stringify(data), 'utf8');
+};
+
+//Handle commands
+var cmd = process.argv[2];
+switch (cmd) {
+    case 'start':
+        if (data.pid) {
+            console.log('Don\'t start the proxy twice! Heard about ' + chalk.green('stop') + ' or ' + chalk.green('restart') + ', doofus?');
+            process.exit();
+        }
+
+        start(process.argv[3]);
+
+        break;
+    case 'stop':
+        if (!data.pid) {
+            console.log('You can\'t stop something that isn\'t running. Duh! How about ' + chalk.green('start') + 'ing it first?');
+            process.exit();
+        }
+
+        stop();
+
+        break;
+    case 'restart':
+        if (!data.pid) {
+            console.log('You are close, but you can\'t restart something that isn\'t running. Try ' + chalk.green('start') + ' instead!');
+            process.exit();
+        }
+
+        stop();
+        start();
+
+        break;
+    case 'monitor':
+        if (!data.pid) {
+            console.log('Do you seriously think, you can monitor something that isn\'t running? Run ' + chalk.green('start') + ' first, stupid.');
+            process.exit();
+        }
+
+        //Use `tail -f` to stream log
+        var tail = spawn('tail', ['-f', logPath]);
+        tail.stdout.on('data', function (data) {
+            process.stdout.write(data);
+        });
+
+        break;
+    case 'help':
+        console.log('Always asking for help... How about doing stuff yourself? Well, here is a quick overview:');
+        console.log(chalk.green('start') + ' is pretty self-explanatory. You can however add an environment to the command, e.g. ' + chalk.red('testing') + ' (default), ' + chalk.red('staging') + ', or ' + chalk.red('production') + '.');
+        console.log(chalk.green('stop') + ' also does exactly what it says.');
+        console.log(chalk.green('restart') + ' is also for the simple-minded.');
+        console.log(chalk.green('monitor') + ' is not a television. It actually shows you the log from the proxy. Funny, huh?');
+        console.log('Now get back to work!');
+        break;
+    default:
+        if (cmd) {
+            console.log('What the fuck is ' + chalk.red(process.argv[2]) + '?! I only know of ' + chalk.green('start') + ', ' + chalk.green('stop') + ', ' + chalk.green('restart') + ', and ' + chalk.green('monitor') + '.');
+        } else {
+            console.log('I can\'t do shit, if you don\'t give me a proper command like ' + chalk.green('start') + ', ' + chalk.green('stop') + ', ' + chalk.green('restart') + ', or ' + chalk.green('monitor') + '.');
+        }
+        process.exit();
+}
