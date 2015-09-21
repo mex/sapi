@@ -12,7 +12,8 @@ var dirPath = __dirname + '/../';
 var logPath = dirPath + 'proxy.log';
 var log = fs.openSync(logPath, 'w');
 var dataPath = dirPath + 'data.json';
-var data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+fs.openSync(dataPath, 'a');
+var data = JSON.parse(fs.readFileSync(dataPath, 'utf8') || '{}');
 
 //Define start/stop methods
 var start = function (env) {
