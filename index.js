@@ -3,7 +3,7 @@ var bodyParser = require('body-parser');
 var request = require('./lib/request');
 
 var app = express();
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
 
 app.all('*', function (req, res) {
     var body = req.body !== {} ? JSON.stringify(req.body) : undefined;
